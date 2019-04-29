@@ -79,7 +79,17 @@ def arg_parse():
                         "Input resolution of the network. Increase to increase accuracy. Decrease to increase speed",
                         default = "416", type = str)
     return parser.parse_args()
-
+def changeReso(flag, abc):
+    if(flag == 1):
+        abc = 320
+        flag = 2
+    elif(flag == 2):
+        abc = 416
+        flag = 3
+    elif(flag == 3):
+        abc = 608
+        flag = 1
+    return abc, flag
 
 if __name__ == '__main__':
     args = arg_parse()
@@ -110,28 +120,19 @@ if __name__ == '__main__':
     videofile = args.video
     
     cap = cv2.VideoCapture(videofile)
-    
+    fps = cap.get(cv2.CAP_PROP_FPS)
     assert cap.isOpened(), 'Cannot capture source'
     
     frames = 0
+    flag = 1
     #start = time.time()    
     while cap.isOpened():
         
         ret, frame = cap.read()
         if ret:
-            '''
-            key = cv2.waitKey(1)
-            if key & 0xFF == ord('w'):
-                inp_dim = 320
-            elif key & 0xFF == ord('e'):
-                inp_dim = 416
-            elif key & 0xFF == ord('r'):
-                inp_dim = 608
-            '''
+            
             start = time.time()
-            #print(time.time())
-            #start2 = time.time()
-            #start3 = time.time()
+           
             #model(get_test_input(inp_dim, CUDA), CUDA)
             model.net_info["height"] = args.reso
             #global inp_dim 
@@ -183,14 +184,19 @@ if __name__ == '__main__':
             
             list(map(lambda x: write(x, orig_im), output))
             
-            #print(time.time())
-            #print(time.time() - start2)
-            #print(time.time() - start3) 
+            
             cv2.imshow("frame", orig_im)
             
             frames += 1
             print("FPS of the video is {:5.2f}".format( 1 / (time.time() - start)))
-            
+            print(fps)
+            key = cv2.waitKey(1)
+            if(frames//fps == 2):
+                abc = args.reso
+                abc, flag = changeReso(flag, abc)
+                args.reso = abc
+                frames = 0
+            '''
             key = cv2.waitKey(10)
             if key & 0xFF == ord('q'):
                 break
@@ -204,9 +210,10 @@ if __name__ == '__main__':
                 #inp_dim = 416
             elif key & 0xFF == ord('r'):
                 args.reso = 608
-                start3 = time.time()
+                #start3 = time.time()
                 #inp_dim = 608
             
+            '''
         else:
             break
     
